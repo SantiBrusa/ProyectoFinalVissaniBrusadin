@@ -1,6 +1,16 @@
 <div class="dashboard">
   <h1 class="dashboard-title">Home</h1>
 
+  <div class="links">
+    {{#each links}}
+      <a href={{this.link}}>{{this.text}}</a>
+    {{/each}}
+  </div>
+  <div class="nav">
+    <a href="/addProduct">Añadir Producto</a>
+    <a href="/cart">Ver Carrito</a>
+  </div>
+
   <div class="product-grid">
     {{#each products}}
       <div class="product-card">
@@ -9,21 +19,12 @@
         </div>
         <h2 class="product-title">{{this.title}}</h2>
         <h3 class="product-price">Precio: ${{this.price}}</h3>
-        <button onclick="addToCart('{{this._id}}')">
+        <button class="product-add" onclick="addToCart('{{this._id}}')">
           Añadir al carrito
         </button>
       </div>
     {{/each}}
   </div>
-
-  <div>
-    {{#each links}}
-      <a href={{this.link}}>{{this.text}}</a>
-    {{/each}}
-  </div>
-
-  <a href="/addProduct">Añadir Producto</a>
-  <a href="/cart">Ver Carrito</a>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>

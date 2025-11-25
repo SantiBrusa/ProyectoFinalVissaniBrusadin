@@ -1,16 +1,55 @@
-<h1>Agregar Producto</h1>
 
-<form action="/api/products" method="post" enctype="multipart/form-data">
 
-  <input type="text" name="title" placeholder="Título" required>
-  <input type="text" name="description" placeholder="Descripción" required>
-  <input type="number" name="price" placeholder="Precio" required>
-  <input type="number" name="stock" placeholder="Stock" required>
-  <input type="text" name="category" placeholder="Categoría" required>
-  <input type="text" name="code" placeholder="Codigo" required>
-  <input type="file" name="thumbnail" accept="image/*">
+<div class="dashboard">
+  <h1>Agregar Producto</h1>
 
-  <button type="submit">Guardar producto</button>
-</form>
+  <div class="nav">
+    <a href="/">Volver</a>
+  </div>
 
-<a href="/">Volver</a>
+  <form id="productForm" class="form" action="/api/products" method="post" enctype="multipart/form-data">
+
+    <input class="form-input" type="text" name="title" placeholder="Título" required>
+    <input class="form-input" type="text" name="description" placeholder="Descripción" required>
+    <input class="form-input" type="number" name="price" placeholder="Precio" required>
+    <input class="form-input" type="number" name="stock" placeholder="Stock" required>
+    <input class="form-input" type="text" name="category" placeholder="Categoría" required>
+    <input class="form-input" type="text" name="code" placeholder="Codigo" required>
+    <input class="form-input" type="file" name="thumbnail" accept="image/*">
+    <div class="form-save-container">
+      <button class="form-save" type="submit">Guardar producto</button>
+    </div>
+  </form>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const form = document.getElementById("productForm");
+
+  if (!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault(); 
+
+    const formData = new FormData(form);
+
+    try {
+      const res = await fetch("/api/products", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+      console.log("Producto guardado:", data);
+
+    } catch (error) {
+      console.error("Error al guardar producto:", error);
+    }
+  });
+
+});
+</script>
+
+

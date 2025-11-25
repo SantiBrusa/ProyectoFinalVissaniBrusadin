@@ -1,12 +1,17 @@
-<h1>Mi Carrito</h1>
+<div class="dashboard">
 
-<a href="/">⬅ Volver</a>
+    <h1>Mi Carrito</h1>
+    <div class="nav">
+        <a href="/">Volver</a>
+    </div>
 
-<ul id="cartList"></ul>
+    <div class="product-grid" id="cartList"></div>
 
-<button onclick="emptyCart()" style="background:red;color:white;margin-top:20px;">
-  Vaciar carrito
-</button>
+    <button onclick="emptyCart()" style="background:red;color:white;margin-top:20px;">
+    Vaciar carrito
+    </button>
+
+</div>
 
 <script>
 async function loadCart() {
@@ -22,13 +27,16 @@ async function loadCart() {
 
   products.forEach(p => {
     list.innerHTML += `
-      <li>
-        <h3>${p.product.title}</h3>
+      <div class="product-card">
+        <div class="product-image-container">
+          <img class="product-image" src=${p.product.thumbnail} alt="" />
+        </div>
+        <h2 class="product-title">${p.product.title}</h2>
         <p>Precio: $${p.product.price}</p>
         <p>Cantidad: ${p.quantity}</p>
         <button onclick="deleteProduct('${p.product._id}')">Eliminar</button>
         <hr>
-      </li>
+      </div>
     `;
   });
 }
