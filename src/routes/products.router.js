@@ -1,6 +1,6 @@
 import express from "express";
 import Product from "../models/product.model.js";
-// import uploader from "../utils/uploader.js";
+import uploader from "../utils/uploader.js";
 
 const productsRouter = express.Router();
 
@@ -20,34 +20,32 @@ productsRouter.get("/", async (req, res) => {
   }
 });
 
-productsRouter.post(
-  "/",
-  /*uploader.single("thumbnail"),*/ async (req, res) => {
+productsRouter.post("/", uploader.single("thumbnail"), async (req, res) => {
     try {
-      const newProduct = req.body;
+      const { title, price, description, category, stock, code } = req.body;
+      
+      const thumbnail = req.file ? `/img/${req.file.filename}` : null;
 
-      // const { title, price, description, category, stock, code } = req.body;
-      // let thumbnail = null;
-      // if (req.file) {
-      //   thumbnail = "/img/" + req.file.filename;
-      // }
-
-      // const newProduct = {
-      //   title,
-      //   description,
-      //   code,
-      //   category,
-      //   price,
-      //   stock,
-      //   thumbnail,
-      // };
+      const newProduct = {
+        title,
+        description,
+        code,
+        category,
+        price,
+        stock,
+        thumbnail,
+      };
 
       const product = new Product(newProduct);
 
       await product.save();
 
-      res.status(201).json({ status: "success", payload: product });
-      // res.redirect("/");
+      
+      const io = req.app.get("io");
+      io.emit("productsUpdated");
+
+      // res.status(201).json({ status: "success", payload: product });
+      
     } catch (error) {
       res
         .status(500)

@@ -1,5 +1,6 @@
 import express from "express";
 import Product from "../models/product.model.js";
+import Cart from "../models/cart.model.js";
 
 const viewsRouter = express.Router();
 
@@ -21,6 +22,14 @@ viewsRouter.get("/", async (req, res) => {
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
   }
+});
+
+viewsRouter.get("/addProduct", (req,res) => {
+  res.render("addProduct");
+});
+
+viewsRouter.get("/cart", (req, res) => {
+  res.render("cart");
 });
 
 export default viewsRouter;

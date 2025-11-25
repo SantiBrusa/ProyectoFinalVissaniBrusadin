@@ -9,6 +9,9 @@
         </div>
         <h2 class="product-title">{{this.title}}</h2>
         <h3 class="product-price">Precio: ${{this.price}}</h3>
+        <button onclick="addToCart('{{this._id}}')">
+          Añadir al carrito
+        </button>
       </div>
     {{/each}}
   </div>
@@ -19,35 +22,51 @@
     {{/each}}
   </div>
 
-  <h1>Agregar Producto</h1>
-
-  <form
-    action="http://localhost:8080"
-    method="post"
-    enctype="multipart/form-data"
-  >
-
-    <label>Título:</label>
-    <input type="text" name="title" required />
-
-    <label>Precio:</label>
-    <input type="number" name="price" required />
-
-    <label>Descripción:</label>
-    <input type="text" name="description" />
-
-    <label>Categoría:</label>
-    <input type="text" name="category" />
-
-    <label>Stock:</label>
-    <input type="number" name="stock" required />
-
-    <label>Código:</label>
-    <input type="text" name="code" required />
-
-    <label>Imagen:</label>
-    <input type="file" name="thumbnail" />
-
-    <button type="submit">Subir Producto</button>
-  </form>
+  <a href="/addProduct">Añadir Producto</a>
+  <a href="/cart">Ver Carrito</a>
 </div>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+  const socket = io();
+
+  socket.on("productsUpdated", () => {
+    location.reload();
+  });
+</script>
+
+<script>
+async function getOrCreateCart() {
+  let cid = localStorage.getItem("cart_id");
+
+  if (!cid) {
+    const res = await fetch("/api/carts", { method: "POST" });
+    const data = await res.json();
+    cid = data.payload._id;
+
+    localStorage.setItem("cart_id", cid);
+  }
+
+  return cid;
+}
+
+getOrCreateCart();
+</script>
+
+<script>
+  async function addToCart(pid) {
+    const cid = await getOrCreateCart();
+
+    const res = await fetch(`/api/carts/${cid}/product/${pid}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quantity: 1 })
+    });
+
+    const data = await res.json();
+    console.log(data);
+
+    updateCartCounter();
+  }
+</script>

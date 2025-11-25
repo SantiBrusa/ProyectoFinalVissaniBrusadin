@@ -1,0 +1,58 @@
+<h1>Mi Carrito</h1>
+
+<a href="/">⬅ Volver</a>
+
+<ul id="cartList"></ul>
+
+<button onclick="emptyCart()" style="background:red;color:white;margin-top:20px;">
+  Vaciar carrito
+</button>
+
+<script>
+async function loadCart() {
+  const cid = localStorage.getItem("cart_id");
+  if (!cid) return;
+
+  const res = await fetch(`/api/carts/${cid}`);
+  const data = await res.json();
+  const products = data.payload;
+
+  const list = document.getElementById("cartList");
+  list.innerHTML = "";
+
+  products.forEach(p => {
+    list.innerHTML += `
+      <li>
+        <h3>${p.product.title}</h3>
+        <p>Precio: $${p.product.price}</p>
+        <p>Cantidad: ${p.quantity}</p>
+        <button onclick="deleteProduct('${p.product._id}')">Eliminar</button>
+        <hr>
+      </li>
+    `;
+  });
+}
+
+async function deleteProduct(pid) {
+  const cid = localStorage.getItem("cart_id");
+
+  await fetch(`/api/carts/${cid}/products/${pid}`, {
+    method: "DELETE"
+  });
+
+  loadCart();
+  updateCartCounter();
+}
+
+async function emptyCart() {
+  const cid = localStorage.getItem("cart_id");
+
+  await fetch(`/api/carts/${cid}`, { method: "DELETE" });
+
+  loadCart();
+  updateCartCounter();
+}
+
+loadCart();
+</script>
+
