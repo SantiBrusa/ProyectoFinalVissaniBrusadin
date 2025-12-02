@@ -1,44 +1,65 @@
 <div class="dashboard">
+  <h1>Mi Carrito</h1>
 
-    <h1>Mi Carrito</h1>
-    <div class="nav">
-        <a href="/">Volver</a>
-    </div>
+  <div class="nav">
+    <a href="/">Volver</a>
+    <span>Productos en carrito: <span id="cart-counter">0</span></span>
+  </div>
 
-    <div class="product-grid" id="cartList"></div>
+  <div class="product-grid" id="cartList"></div>
 
-    <button onclick="emptyCart()" style="background:red;color:white;margin-top:20px;">
+  <button onclick="emptyCart()" style="background:red;color:white;margin-top:20px;">
     Vaciar carrito
-    </button>
-
+  </button>
 </div>
 
 <script>
+async function updateCartCounter() {
+  const counter = document.getElementById("cart-counter");
+  if (!counter) return;
+
+  const cid = localStorage.getItem("cart_id");
+  if (!cid) {
+    counter.textContent = 0;
+    return;
+  }
+
+  const res = await fetch(`/api/carts/${cid}`);
+  const data = await res.json();
+
+  const items = data.payload?.products || data.payload || [];
+
+  const total = items.reduce((acc, item) => acc + item.quantity, 0);
+  counter.textContent = total;
+}
+
 async function loadCart() {
   const cid = localStorage.getItem("cart_id");
   if (!cid) return;
 
   const res = await fetch(`/api/carts/${cid}`);
   const data = await res.json();
-  const products = data.payload;
 
-  const list = document.getElementById("cartList");
-  list.innerHTML = "";
+  const items = data.payload?.products || data.payload || [];
+  const cartList = document.getElementById("cartList");
 
-  products.forEach(p => {
-    list.innerHTML += `
+  cartList.innerHTML = "";
+
+  items.forEach(item => {
+    cartList.innerHTML += `
       <div class="product-card">
         <div class="product-image-container">
-          <img class="product-image" src=${p.product.thumbnail} alt="" />
+          <img class="product-image" src="${item.product.thumbnail}" />
         </div>
-        <h2 class="product-title">${p.product.title}</h2>
-        <p>Precio: $${p.product.price}</p>
-        <p>Cantidad: ${p.quantity}</p>
-        <button onclick="deleteProduct('${p.product._id}')">Eliminar</button>
-        <hr>
+        <h2>${item.product.title}</h2>
+        <p>Precio: $${item.product.price}</p>
+        <p>Cantidad: ${item.quantity}</p>
+        <button onclick="deleteProduct('${item.product._id}')">Eliminar</button>
       </div>
     `;
   });
+
+  updateCartCounter();
 }
 
 async function deleteProduct(pid) {
@@ -49,7 +70,6 @@ async function deleteProduct(pid) {
   });
 
   loadCart();
-  updateCartCounter();
 }
 
 async function emptyCart() {
@@ -58,9 +78,7 @@ async function emptyCart() {
   await fetch(`/api/carts/${cid}`, { method: "DELETE" });
 
   loadCart();
-  updateCartCounter();
 }
 
 loadCart();
 </script>
-

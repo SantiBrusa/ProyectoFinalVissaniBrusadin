@@ -1,98 +1,60 @@
 import express from "express";
 import Product from "../models/product.model.js";
 import uploader from "../utils/uploader.js";
+import ProductManager from "../productManager.js";
 
 const productsRouter = express.Router();
+const productManager = new ProductManager();
 
 productsRouter.get("/", async (req, res) => {
   try {
-    const { limit = 10, page = 1 } = req.query;
-
-    const data = await Product.paginate({}, { limit, page });
+    const data = await productManager.getProducts(req.query);
     const products = data.docs;
     delete data.docs;
 
-    res.status(200).json({ status: "success", payload: products, ...data });
+    res.json({ status: "success", payload: products, ...data });
   } catch (error) {
-    res
-      .status(500)
-      .json({ status: "error", message: "Error al recuperar los productos" });
+    res.status(500).json({ status: "error", message: "Error al recuperar los productos" });
   }
 });
 
 productsRouter.post("/", uploader.single("thumbnail"), async (req, res) => {
-    try {
-      const { title, price, description, category, stock, code } = req.body;
-      
-      const thumbnail = req.file ? `/img/${req.file.filename}` : null;
+  try {
+    const thumbnail = req.file ? `/img/${req.file.filename}` : null;
 
-      const newProduct = {
-        title,
-        description,
-        code,
-        category,
-        price,
-        stock,
-        thumbnail,
-      };
+    const product = await productManager.addProduct({
+      ...req.body,
+      thumbnail,
+    });
 
-      const product = new Product(newProduct);
+    const io = req.app.get("io");
+    io.emit("productsUpdated");
 
-      await product.save();
-
-      
-      const io = req.app.get("io");
-      io.emit("productsUpdated");
-
-      // res.status(201).json({ status: "success", payload: product });
-      
-    } catch (error) {
-      res
-        .status(500)
-        .json({ status: "error", message: "Error al agregar los productos" });
-    }
+    res.status(201).json({ status: "success", payload: product });
+  } catch (error) {
+    res.status(400).json({ status: "error", message: error.message });
   }
-);
+});
 
 productsRouter.put("/:pid", async (req, res) => {
   try {
-    const pid = req.params.pid;
-    const updates = req.body;
-
-    const updateProducts = await Product.findByIdAndUpdate(pid, updates, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!updateProducts)
-      return res
-        .status(404)
-        .json({ status: "error", message: "Producto no encontrado" });
-
-    res.status(200).json({ status: "success", payload: updateProducts });
+    const updated = await productManager.updateProduct(req.params.pid, req.body);
+    res.json({ status: "success", payload: updated });
   } catch (error) {
-    res
-      .status(500)
-      .json({ status: "error", message: "Error al actualizar el producto" });
+    res.status(500).json({ status: "error", message: error.message });
   }
 });
 
 productsRouter.delete("/:pid", async (req, res) => {
   try {
-    const pid = req.params.pid;
+    const deleted = await productManager.deleteProduct(req.params.pid);
 
-    const deletedProduct = await Product.findByIdAndDelete(pid);
+    const io = req.app.get("io");
+    io.emit("productsUpdated");
 
-    if (!deletedProduct)
-      return res
-        .status(404)
-        .json({ status: "error", message: "Producto no encontrado" });
-
-    res.status(200).json({ status: "success", payload: deletedProduct });
+    res.json({ status: "success", payload: deleted });
   } catch (error) {
-    res
-      .status(500)
-      .json({ status: "error", message: "Error al eliminar el producto" });
+    res.status(500).json({ status: "error", message: error.message });
   }
 });
 

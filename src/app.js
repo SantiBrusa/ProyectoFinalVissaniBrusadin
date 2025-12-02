@@ -11,10 +11,11 @@ import { engine } from "express-handlebars";
 dotenv.config();
 
 const app = express();
-app.use(express.json());
-
 const server = http.createServer(app);
 const io = new Server(server);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 connectMongoDb();
 
@@ -25,9 +26,18 @@ app.set("views", "./src/views");
 app.set("io", io);
 
 app.use(express.static("public"));
+
 app.use("/api/products", productsRouter);
 app.use("/api/carts", cartsRouter);
 app.use("/", viewsRouter);
+
+io.on("connection", (socket) => {
+  console.log("Nuevo cliente conectado");
+
+  socket.on("disconnect", () => {
+    console.log("Cliente desconectado");
+  });
+});
 
 server.listen(8080, () => {
   console.log("Server iniciado");
